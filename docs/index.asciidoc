@@ -108,5 +108,37 @@ The AWS profile name for authentication.
 This ensures that the `~/.aws/credentials` AWS auth provider is used.
 By default this is empty and the default chain will be used.
 
+[id="plugins-{type}s-{plugin}-proxy_host"]
+===== `proxy_host`
+
+  * Value type is <<string,string>>
+  * There is no default value for this setting.
+
+Hostname of proxy server if required
+
+[id="plugins-{type}s-{plugin}-proxy_port"]
+===== `proxy_port`
+
+  * Value type is <<number,number>>
+  * There is no default value for this setting.
+
+Port number of proxy server if required
+
+[id="plugins-{type}s-{plugin}-proxy_username"]
+===== `proxy_username`
+
+  * Value type is <<string,string>>
+  * There is no default value for this setting.
+
+Username for authentication with proxy server if required
+
+[id="plugins-{type}s-{plugin}-proxy_password"]
+===== `proxy_password`
+
+  * Value type is <<string,string>>
+  * There is no default value for this setting.
+
+Password for authentication with proxy server if required
+
 [id="plugins-{type}s-{plugin}-common-options"]
 include::{include_path}/{type}.asciidoc[]

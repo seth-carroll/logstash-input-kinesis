@@ -24,6 +24,7 @@ require "logstash/inputs/kinesis/version"
 class LogStash::Inputs::Kinesis < LogStash::Inputs::Base
   KCL = com.amazonaws.services.kinesis.clientlibrary.lib.worker
   KCL_PROCESSOR_FACTORY_CLASS = com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
+  KCL_CLIENT_CONFIGURATION = com.amazonaws.ClientConfiguration
   require "logstash/inputs/kinesis/worker"
 
   config_name 'kinesis'
@@ -42,6 +43,18 @@ class LogStash::Inputs::Kinesis < LogStash::Inputs::Base
 
   # The AWS region for Kinesis, DynamoDB, and CloudWatch (if enabled)
   config :region, :validate => :string, :default => "us-east-1"
+
+  # Proxy host
+  config :proxy_host, :validate => :string
+
+  # Proxy port
+  config :proxy_port, :validate => :number
+
+  # Proxy username
+  config :proxy_username, :validate => :string
+
+  # Proxy password
+  config :proxy_password, :validate => :string
 
   # How many seconds between worker checkpoints to dynamodb.
   config :checkpoint_interval_seconds, :validate => :number, :default => 60
@@ -84,13 +97,36 @@ class LogStash::Inputs::Kinesis < LogStash::Inputs::Base
       KCL::InitialPositionInStream::LATEST
     end
 
-    @kcl_config = KCL::KinesisClientLibConfiguration.new(
-      @application_name,
-      @kinesis_stream_name,
-      creds,
-      worker_id).
-        withInitialPositionInStream(initial_position_in_stream).
-        withRegionName(@region)
+    if @proxy_host && @proxy_port
+      if @proxy_username && @proxy_password
+        @kcl_proxy_config = KCL_CLIENT_CONFIGURATION.new().
+          withProxyHost(@proxy_host).
+          withProxyPort(@proxy_port).
+          withProxyUsername(@proxy_username).
+          withProxyPassword(@proxy_password)
+      else
+        @kcl_proxy_config = KCL_CLIENT_CONFIGURATION.new().
+          withProxyHost(@proxy_host).
+          withProxyPort(@proxy_port)
+      end
+
+      @kcl_config = KCL::KinesisClientLibConfiguration.new(
+        @application_name,
+        @kinesis_stream_name,
+        creds,
+        worker_id).
+          withInitialPositionInStream(initial_position_in_stream).
+          withRegionName(@region).
+          withCommonClientConfig(@kcl_proxy_config)
+    else
+      @kcl_config = KCL::KinesisClientLibConfiguration.new(
+        @application_name,
+        @kinesis_stream_name,
+        creds,
+        worker_id).
+          withInitialPositionInStream(initial_position_in_stream).
+          withRegionName(@region)
+    end
   end
 
   def run(output_queue)
